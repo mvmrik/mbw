@@ -56,16 +56,29 @@ jobs:
         run: |
           pyinstaller sps.spec
 
-      - name: Zip macOS app
+      - name: Rename app bundle
+        run: mv dist/SPS.app "dist/My Bitcoin World.app"
+
+      - name: Create DMG
         run: |
-          cd dist
-          zip -r MyBitcoinWorld-macOS.zip SPS.app
+          brew install create-dmg
+          create-dmg \
+            --volname "My Bitcoin World" \
+            --volicon "mbw.png" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 128 \
+            --icon "My Bitcoin World.app" 175 190 \
+            --hide-extension "My Bitcoin World.app" \
+            --app-drop-link 425 190 \
+            "MyBitcoinWorld-macOS.dmg" \
+            "dist/"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: MBW-macOS
-          path: dist/MyBitcoinWorld-macOS.zip
+          path: MyBitcoinWorld-macOS.dmg
 
   build-linux:
     runs-on: ubuntu-latest
@@ -154,7 +167,7 @@ jobs:
         with:
           files: |
             MBW-Windows/MyBitcoinWorld.exe
-            MBW-macOS/MyBitcoinWorld-macOS.zip
+            MBW-macOS/MyBitcoinWorld-macOS.dmg
             MBW-Linux/MyBitcoinWorld-Linux.AppImage
           generate_release_notes: true
         env:
