@@ -4,7 +4,7 @@
 TRANSLATIONS = {
     "en": {
         # App
-        "app_title": "SPS - Seed Phrase Storage",
+        "app_title": "My Bitcoin World",
         "tab_sps": "SPS",
         "tab_settings": "Settings",
 
@@ -25,6 +25,11 @@ TRANSLATIONS = {
         "label_result": "Result:",
         "copy_result": "Copy to Clipboard",
         "copied": "Copied!",
+        "chars_remaining": "{n} remaining",
+        "chars_ok": "✓ Length OK",
+        "word_valid": "✓",
+        "word_invalid": "✗ unknown word",
+        "word_duplicate": "✗ duplicate",
 
         # Decode input
         "label_encoded_input": "Encoded Code (paste here):",
@@ -41,12 +46,40 @@ TRANSLATIONS = {
         "err_empty_words": "Please enter your seed phrase words.",
         "err_empty_passwords": "Please enter both passwords.",
         "err_empty_encoded": "Please enter the encoded code.",
+        "err_duplicate_words": "Duplicate words detected. Each word must be unique.",
 
         # Settings Tab
         "settings_title": "Settings",
         "label_language": "Language:",
         "btn_save_settings": "Save Settings",
         "settings_saved": "Settings saved.",
+
+        # Portfolio Tab
+        "tab_portfolio": "Portfolio",
+        "portfolio_title": "Bitcoin Portfolio",
+        "portfolio_total": "Total Balance:",
+        "portfolio_btc_price": "BTC Price:",
+        "portfolio_last_updated": "Last updated:",
+        "portfolio_never": "never",
+        "portfolio_offline": "offline",
+        "btn_refresh": "⟳ Refresh",
+        "btn_add_address": "+ Add Address",
+        "label_address": "BTC Address:",
+        "label_addr_label": "Label (optional):",
+        "placeholder_address": "bc1q... or 1... or 3...",
+        "placeholder_label": "e.g. Cold wallet",
+        "btn_save_address": "Add",
+        "btn_cancel": "Cancel",
+        "btn_remove_address": "Remove",
+        "confirm_remove": "Remove address '{label}'?",
+        "portfolio_no_addresses": "No addresses yet. Click '+ Add Address' to get started.",
+        "portfolio_balance_unknown": "balance unknown",
+        "portfolio_refreshing": "Refreshing...",
+        "portfolio_refresh_done": "Updated successfully.",
+        "portfolio_refresh_errors": "Updated with errors:\n{errors}",
+        "err_empty_address": "Please enter a BTC address.",
+        "err_invalid_address": "Invalid BTC address format.",
+        "err_duplicate_address": "This address is already in your portfolio.",
 
         # Languages
         "lang_en": "English",
@@ -55,7 +88,7 @@ TRANSLATIONS = {
 
     "bg": {
         # App
-        "app_title": "SPS - Съхранение на Seed Phrase",
+        "app_title": "My Bitcoin World",
         "tab_sps": "SPS",
         "tab_settings": "Настройки",
 
@@ -76,6 +109,11 @@ TRANSLATIONS = {
         "label_result": "Резултат:",
         "copy_result": "Копирай в Клипборда",
         "copied": "Копирано!",
+        "chars_remaining": "остават {n}",
+        "chars_ok": "✓ Дължината е ОК",
+        "word_valid": "✓",
+        "word_invalid": "✗ непозната дума",
+        "word_duplicate": "✗ дублирана",
 
         # Decode input
         "label_encoded_input": "Кодиран Код (постави тук):",
@@ -92,12 +130,40 @@ TRANSLATIONS = {
         "err_empty_words": "Моля въведете думите от вашата seed фраза.",
         "err_empty_passwords": "Моля въведете двете пароли.",
         "err_empty_encoded": "Моля въведете кодирания код.",
+        "err_duplicate_words": "Открити са дублирани думи. Всяка дума трябва да е уникална.",
 
         # Settings Tab
         "settings_title": "Настройки",
         "label_language": "Език:",
         "btn_save_settings": "Запази Настройките",
         "settings_saved": "Настройките са запазени.",
+
+        # Portfolio Tab
+        "tab_portfolio": "Портфолио",
+        "portfolio_title": "Bitcoin Портфолио",
+        "portfolio_total": "Общо Салдо:",
+        "portfolio_btc_price": "Цена на BTC:",
+        "portfolio_last_updated": "Последно обновено:",
+        "portfolio_never": "никога",
+        "portfolio_offline": "офлайн",
+        "btn_refresh": "⟳ Обнови",
+        "btn_add_address": "+ Добави Адрес",
+        "label_address": "BTC Адрес:",
+        "label_addr_label": "Етикет (по желание):",
+        "placeholder_address": "bc1q... или 1... или 3...",
+        "placeholder_label": "напр. Студен портфейл",
+        "btn_save_address": "Добави",
+        "btn_cancel": "Отказ",
+        "btn_remove_address": "Премахни",
+        "confirm_remove": "Премахване на адрес '{label}'?",
+        "portfolio_no_addresses": "Няма адреси. Натиснете '+ Добави Адрес' за начало.",
+        "portfolio_balance_unknown": "балансът е неизвестен",
+        "portfolio_refreshing": "Обновяване...",
+        "portfolio_refresh_done": "Обновено успешно.",
+        "portfolio_refresh_errors": "Обновено с грешки:\n{errors}",
+        "err_empty_address": "Моля въведете BTC адрес.",
+        "err_invalid_address": "Невалиден формат на BTC адрес.",
+        "err_duplicate_address": "Този адрес вече е в портфолиото.",
 
         # Languages
         "lang_en": "English",
