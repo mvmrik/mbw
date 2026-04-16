@@ -201,11 +201,11 @@ class SPSApp(tk.Tk):
 
         self.title(t(self.lang, "app_title"))
         self.resizable(True, True)
-        self.minsize(700, 580)
+        self.minsize(800, 580)
 
         # Center window
         self.update_idletasks()
-        w, h = 820, 680
+        w, h = 960, 700
         x = (self.winfo_screenwidth() - w) // 2
         y = (self.winfo_screenheight() - h) // 2
         self.geometry(f"{w}x{h}+{x}+{y}")
@@ -218,6 +218,39 @@ class SPSApp(tk.Tk):
         except Exception:
             pass
 
+        self._show_splash()
+
+    def _show_splash(self):
+        """Show splash image inside the main window, build UI after 3 seconds."""
+        try:
+            img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mbw.png")
+            self._splash_img = tk.PhotoImage(file=img_path)
+            # Scale down if too large (tk.PhotoImage supports subsample)
+            w, h = self._splash_img.width(), self._splash_img.height()
+            factor = max(1, w // 580, h // 580)
+            if factor > 1:
+                self._splash_img = self._splash_img.subsample(factor, factor)
+        except Exception as e:
+            print("Splash image error:", e)
+            self._splash_img = None
+
+        self._splash_frame = tk.Frame(self, bg="#1a1a2e")
+        self._splash_frame.pack(fill=tk.BOTH, expand=True)
+
+        if self._splash_img:
+            lbl = tk.Label(self._splash_frame, image=self._splash_img,
+                           bg="#1a1a2e", bd=0)
+            lbl.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            tk.Label(self._splash_frame, text="My Bitcoin World",
+                     font=("Helvetica", 28, "bold"),
+                     fg="white", bg="#1a1a2e").place(relx=0.5, rely=0.5, anchor="center")
+
+        self.after(3000, self._finish_splash)
+
+    def _finish_splash(self):
+        self._splash_frame.destroy()
+        self._splash_img = None
         self._build_ui()
 
     def _build_ui(self):
@@ -229,10 +262,12 @@ class SPSApp(tk.Tk):
 
         self.sps_tab = SPSTab(self.notebook, self.lang, self)
         self.portfolio_tab = PortfolioTab(self.notebook, self.lang, self)
+        self.help_tab = HelpTab(self.notebook, self.lang)
         self.settings_tab = SettingsTab(self.notebook, self.lang, self)
 
         self.notebook.add(self.sps_tab, text=t(self.lang, "tab_sps"))
         self.notebook.add(self.portfolio_tab, text=t(self.lang, "tab_portfolio"))
+        self.notebook.add(self.help_tab, text=t(self.lang, "tab_help"))
         self.notebook.add(self.settings_tab, text=t(self.lang, "tab_settings"))
 
     def change_language(self, new_lang: str):
@@ -318,49 +353,37 @@ class SPSTab(tk.Frame):
         pass_row = 8
 
         p1_lbl = tk.Label(sf, text=t(lang, "label_password1"), font=("Helvetica", 10, "bold"))
-        p1_lbl.grid(row=pass_row, column=0, columnspan=4, sticky="w", pady=(14, 2), padx=4)
+        p1_lbl.grid(row=pass_row, column=0, columnspan=12, sticky="w", pady=(14, 2), padx=4)
 
         pass1_frame = tk.Frame(sf)
-        pass1_frame.grid(row=pass_row+1, column=0, columnspan=11, sticky="ew", padx=4, pady=2)
+        pass1_frame.grid(row=pass_row+1, column=0, columnspan=12, sticky="w", padx=4, pady=2)
+        self.pass1_cells = self._build_pass_cells(pass1_frame, 1)
 
-        self.pass1_entry = tk.Entry(pass1_frame, width=48, font=("Helvetica", 10))
-        self.pass1_entry.pack(side=tk.LEFT)
-
-        self.pass1_counter = tk.Label(pass1_frame, text="", font=("Helvetica", 9),
-                                      fg="#888888", width=18, anchor="w")
-        self.pass1_counter.pack(side=tk.LEFT, padx=(8, 0))
+        self.pass1_counter = tk.Label(sf, text="", font=("Helvetica", 9),
+                                      fg="#888888", anchor="w")
+        self.pass1_counter.grid(row=pass_row+2, column=0, columnspan=12, sticky="w", padx=4)
 
         p2_lbl = tk.Label(sf, text=t(lang, "label_password2"), font=("Helvetica", 10, "bold"))
-        p2_lbl.grid(row=pass_row+2, column=0, columnspan=4, sticky="w", pady=(8, 2), padx=4)
+        p2_lbl.grid(row=pass_row+3, column=0, columnspan=12, sticky="w", pady=(8, 2), padx=4)
 
         pass2_frame = tk.Frame(sf)
-        pass2_frame.grid(row=pass_row+3, column=0, columnspan=11, sticky="ew", padx=4, pady=2)
+        pass2_frame.grid(row=pass_row+4, column=0, columnspan=12, sticky="w", padx=4, pady=2)
+        self.pass2_cells = self._build_pass_cells(pass2_frame, 2)
 
-        self.pass2_entry = tk.Entry(pass2_frame, width=48, font=("Helvetica", 10))
-        self.pass2_entry.pack(side=tk.LEFT)
-
-        self.pass2_counter = tk.Label(pass2_frame, text="", font=("Helvetica", 9),
-                                      fg="#888888", width=18, anchor="w")
-        self.pass2_counter.pack(side=tk.LEFT, padx=(8, 0))
-
-        # Bind password validation
-        vcmd_pass = self.register(self._validate_pass_char)
-        self.pass1_entry.config(validate="key", validatecommand=(vcmd_pass, "%P", "%S"))
-        self.pass2_entry.config(validate="key", validatecommand=(vcmd_pass, "%P", "%S"))
-
-        self.pass1_entry.bind("<KeyRelease>", lambda e: self._update_pass_counter(1))
-        self.pass2_entry.bind("<KeyRelease>", lambda e: self._update_pass_counter(2))
+        self.pass2_counter = tk.Label(sf, text="", font=("Helvetica", 9),
+                                      fg="#888888", anchor="w")
+        self.pass2_counter.grid(row=pass_row+5, column=0, columnspan=12, sticky="w", padx=4)
 
         # --- Encoded input ---
         enc_lbl = tk.Label(sf, text=t(lang, "label_encoded_input"), font=("Helvetica", 10, "bold"))
-        enc_lbl.grid(row=pass_row+4, column=0, columnspan=4, sticky="w", pady=(14, 2), padx=4)
+        enc_lbl.grid(row=pass_row+6, column=0, columnspan=4, sticky="w", pady=(14, 2), padx=4)
 
         self.encoded_entry = tk.Entry(sf, width=60, font=("Helvetica", 10))
-        self.encoded_entry.grid(row=pass_row+5, column=0, columnspan=11, sticky="ew", padx=4, pady=2)
+        self.encoded_entry.grid(row=pass_row+7, column=0, columnspan=11, sticky="ew", padx=4, pady=2)
 
         # --- Buttons ---
         btn_frame = tk.Frame(sf)
-        btn_frame.grid(row=pass_row+6, column=0, columnspan=12, pady=14)
+        btn_frame.grid(row=pass_row+8, column=0, columnspan=12, pady=14)
 
         tk.Button(btn_frame, text=t(lang, "btn_encode"),
                   font=("Helvetica", 10, "bold"),
@@ -383,10 +406,10 @@ class SPSTab(tk.Frame):
         # --- Result ---
         tk.Label(sf, text=t(lang, "label_result"),
                  font=("Helvetica", 10, "bold")).grid(
-            row=pass_row+7, column=0, columnspan=4, sticky="w", pady=(4, 2), padx=4)
+            row=pass_row+9, column=0, columnspan=4, sticky="w", pady=(4, 2), padx=4)
 
         result_frame = tk.Frame(sf)
-        result_frame.grid(row=pass_row+8, column=0, columnspan=12, sticky="ew", padx=4, pady=2)
+        result_frame.grid(row=pass_row+10, column=0, columnspan=12, sticky="ew", padx=4, pady=2)
 
         self.result_text = tk.Text(result_frame, height=4, font=("Courier", 10),
                                    state=tk.DISABLED, wrap=tk.WORD,
@@ -396,10 +419,64 @@ class SPSTab(tk.Frame):
         self.copy_btn = tk.Button(sf, text=t(lang, "copy_result"),
                                   font=("Helvetica", 9), cursor="hand2",
                                   command=self._copy_result)
-        self.copy_btn.grid(row=pass_row+9, column=0, columnspan=4, sticky="w", padx=4, pady=6)
+        self.copy_btn.grid(row=pass_row+11, column=0, columnspan=4, sticky="w", padx=4, pady=6)
 
         for c in range(0, 12, 3):
             sf.columnconfigure(c+1, weight=1)
+
+    def _build_pass_cells(self, parent: tk.Frame, which: int) -> list:
+        """Builds 24 single-character letter cells in a single row."""
+        cells = []
+        vcmd = self.register(lambda new_val, ch, w=which: self._pass_cell_validate(new_val, ch, w))
+        for i in range(24):
+            cell = tk.Entry(parent, width=2, font=("Helvetica", 11, "bold"),
+                            justify="center", relief=tk.SOLID, bd=1,
+                            bg="#f8f8f8")
+            cell.config(validate="key", validatecommand=(vcmd, "%P", "%S"))
+            cell.bind("<KeyRelease>", lambda e, w=which: self._on_pass_cell_key(e, w))
+            cell.bind("<BackSpace>", lambda e, w=which: self._on_pass_cell_backspace(e, w))
+            cell.grid(row=0, column=i, padx=1, pady=1)
+            cells.append(cell)
+        return cells
+
+    def _pass_cell_validate(self, new_val: str, char: str, which: int) -> bool:
+        """Allow only 1 ASCII letter per cell."""
+        if char == "":
+            return True
+        if not (char.isalpha() and char.isascii()):
+            return False
+        # max 1 char
+        return len(new_val) <= 1
+
+    def _on_pass_cell_key(self, event, which: int):
+        """After typing a letter in a cell, move focus to next cell."""
+        cells = self.pass1_cells if which == 1 else self.pass2_cells
+        widget = event.widget
+        if widget not in cells:
+            return
+        idx = cells.index(widget)
+        val = widget.get()
+        if val and idx < len(cells) - 1:
+            cells[idx + 1].focus_set()
+            cells[idx + 1].selection_range(0, tk.END)
+        self._update_pass_counter(which)
+
+    def _on_pass_cell_backspace(self, event, which: int):
+        """On backspace in empty cell, move to previous cell."""
+        cells = self.pass1_cells if which == 1 else self.pass2_cells
+        widget = event.widget
+        if widget not in cells:
+            return
+        idx = cells.index(widget)
+        if not widget.get() and idx > 0:
+            cells[idx - 1].focus_set()
+            cells[idx - 1].delete(0, tk.END)
+        self._update_pass_counter(which)
+
+    def _get_pass(self, which: int) -> str:
+        """Returns password string from cells."""
+        cells = self.pass1_cells if which == 1 else self.pass2_cells
+        return "".join(c.get() for c in cells)
 
     def _get_used_words(self, exclude_idx: int) -> set:
         """Returns set of valid BIP-39 words already entered, excluding entry at exclude_idx."""
@@ -469,23 +546,14 @@ class SPSTab(tk.Frame):
         self._update_pass_counter(1)
         self._update_pass_counter(2)
 
-    # --- Password char filter ---
-    def _validate_pass_char(self, new_value: str, char: str) -> bool:
-        """Allow only ASCII letters and digits."""
-        if char == "":
-            return True
-        return char.isdigit() or (char.isalpha() and char.isascii())
-
     # --- Password counter ---
     def _update_pass_counter(self, which: int):
         word_count = len([e for e in self.word_entries if e.get().strip()])
         if word_count == 0:
             word_count = 12  # default hint
 
-        entry = self.pass1_entry if which == 1 else self.pass2_entry
         counter_lbl = self.pass1_counter if which == 1 else self.pass2_counter
-
-        current_len = len(entry.get())
+        current_len = len(self._get_pass(which))
         remaining = word_count - current_len
 
         if remaining > 0:
@@ -499,7 +567,6 @@ class SPSTab(tk.Frame):
                 fg="#2e7d32"
             )
         else:
-            # Too many chars
             counter_lbl.config(
                 text=t(self.lang, "chars_remaining", n=remaining),
                 fg="#c62828"
@@ -555,8 +622,8 @@ class SPSTab(tk.Frame):
             messagebox.showerror(t(lang, "app_title"), t(lang, "err_empty_words"))
             return
 
-        pass1 = self.pass1_entry.get()
-        pass2 = self.pass2_entry.get()
+        pass1 = self._get_pass(1)
+        pass2 = self._get_pass(2)
         if not pass1 or not pass2:
             messagebox.showerror(t(lang, "app_title"), t(lang, "err_empty_passwords"))
             return
@@ -575,8 +642,8 @@ class SPSTab(tk.Frame):
             messagebox.showerror(t(lang, "app_title"), t(lang, "err_empty_encoded"))
             return
 
-        pass1 = self.pass1_entry.get()
-        pass2 = self.pass2_entry.get()
+        pass1 = self._get_pass(1)
+        pass2 = self._get_pass(2)
         if not pass1 or not pass2:
             messagebox.showerror(t(lang, "app_title"), t(lang, "err_empty_passwords"))
             return
@@ -611,8 +678,10 @@ class SPSTab(tk.Frame):
             entry.config(bg="white")
             self.word_status_labels[i].config(text="")
         self._update_entry_states()
-        self.pass1_entry.delete(0, tk.END)
-        self.pass2_entry.delete(0, tk.END)
+        for c in self.pass1_cells:
+            c.delete(0, tk.END)
+        for c in self.pass2_cells:
+            c.delete(0, tk.END)
         self.pass1_counter.config(text="")
         self.pass2_counter.config(text="")
         self.encoded_entry.delete(0, tk.END)
@@ -1003,6 +1072,98 @@ class PortfolioTab(tk.Frame):
                 text="", fg="#888888"))
 
 
+# --- Help Tab ---
+class HelpTab(tk.Frame):
+    def __init__(self, parent, lang: str):
+        super().__init__(parent)
+        self.lang = lang
+        self._bip39_loaded = False
+        self._build()
+        # Load BIP39 list only when this tab is first shown
+        self.bind("<Visibility>", self._on_visible)
+
+    def _build(self):
+        lang = self.lang
+
+        # Scrollable area
+        outer = tk.Frame(self)
+        outer.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+
+        self._canvas = tk.Canvas(outer, borderwidth=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(outer, orient="vertical", command=self._canvas.yview)
+        self._inner = tk.Frame(self._canvas)
+
+        self._inner.bind("<Configure>", lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
+        self._canvas.create_window((0, 0), window=self._inner, anchor="nw")
+        self._canvas.configure(yscrollcommand=scrollbar.set)
+        self._canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self._canvas.bind_all("<MouseWheel>", lambda e: self._canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        self._canvas.bind_all("<Button-4>", lambda e: self._canvas.yview_scroll(-1, "units"))
+        self._canvas.bind_all("<Button-5>", lambda e: self._canvas.yview_scroll(1, "units"))
+
+        inner = self._inner
+
+        # --- Algorithm section ---
+        tk.Label(inner, text=t(lang, "label_algorithm"),
+                 font=("Helvetica", 12, "bold")).pack(anchor="w", padx=8, pady=(12, 4))
+
+        algo_text = tk.Text(inner, font=("Courier", 9), height=22,
+                            state=tk.NORMAL, wrap=tk.WORD,
+                            bg="#f5f5f5", relief=tk.FLAT, bd=0,
+                            padx=10, pady=6)
+        algo_text.insert(tk.END, t(lang, "text_algorithm"))
+        algo_text.config(state=tk.DISABLED)
+        algo_text.pack(fill=tk.X, padx=8, pady=(0, 16))
+
+        # --- BIP39 word list header ---
+        tk.Label(inner, text=t(lang, "label_bip39_list"),
+                 font=("Helvetica", 12, "bold")).pack(anchor="w", padx=8, pady=(4, 4))
+
+        tk.Label(inner, text=t(lang, "desc_bip39_list"),
+                 font=("Helvetica", 9), fg="#555555").pack(anchor="w", padx=8, pady=(0, 6))
+
+        # Button to load BIP39 list on demand
+        self._load_btn = tk.Button(inner, text=t(lang, "btn_show_bip39"),
+                                   font=("Helvetica", 10), cursor="hand2",
+                                   bg="#1565c0", fg="white", padx=12, pady=6,
+                                   command=self._load_bip39)
+        self._load_btn.pack(anchor="w", padx=8, pady=(0, 16))
+
+        self._status_lbl = tk.Label(inner, text="", font=("Helvetica", 9), fg="#888888")
+        self._status_lbl.pack(anchor="w", padx=8)
+
+    def _on_visible(self, event=None):
+        pass  # loading is now triggered by button only
+
+    def _load_bip39(self):
+        if self._bip39_loaded:
+            return
+        self._bip39_loaded = True
+
+        self._load_btn.config(state=tk.DISABLED, text="...")
+        self._status_lbl.config(text=t(self.lang, "bip39_loading"))
+        self.update()
+
+        from bip39_wordlist import BIP39_WORDS
+
+        list_frame = tk.Frame(self._inner, bg="#f9f9f9", relief=tk.SUNKEN, bd=1)
+        list_frame.pack(fill=tk.BOTH, padx=8, pady=(0, 16))
+
+        cols = 4
+        for i, word in enumerate(BIP39_WORDS):
+            r = i // cols
+            c = i % cols
+            tk.Label(list_frame,
+                     text=f"{i+1:4d}. {word}",
+                     font=("Courier", 9), anchor="w", bg="#f9f9f9",
+                     width=20).grid(row=r, column=c, sticky="w", padx=4, pady=0)
+
+        self._load_btn.destroy()
+        self._status_lbl.destroy()
+
+
 # --- Settings Tab ---
 class SettingsTab(tk.Frame):
     def __init__(self, parent, lang: str, app: SPSApp):
@@ -1043,6 +1204,29 @@ class SettingsTab(tk.Frame):
         self.status_lbl = tk.Label(self, text="", font=("Helvetica", 9), fg="green")
         self.status_lbl.pack()
 
+        # --- Import / Export ---
+        tk.Frame(self, height=1, bg="#cccccc").pack(fill=tk.X, padx=40, pady=(20, 12))
+
+        tk.Label(self, text=t(lang, "label_backup"),
+                 font=("Helvetica", 11, "bold")).pack(anchor="w", padx=40)
+
+        tk.Label(self, text=t(lang, "desc_backup"),
+                 font=("Helvetica", 9), fg="#555555",
+                 wraplength=500, justify=tk.LEFT).pack(anchor="w", padx=40, pady=(4, 12))
+
+        btn_row = tk.Frame(self)
+        btn_row.pack(anchor="w", padx=40)
+
+        tk.Button(btn_row, text=t(lang, "btn_export"),
+                  font=("Helvetica", 10), bg="#2e7d32", fg="white",
+                  padx=14, pady=6, cursor="hand2",
+                  command=self._export).pack(side=tk.LEFT, padx=(0, 12))
+
+        tk.Button(btn_row, text=t(lang, "btn_import"),
+                  font=("Helvetica", 10), bg="#e65100", fg="white",
+                  padx=14, pady=6, cursor="hand2",
+                  command=self._import).pack(side=tk.LEFT)
+
     def _save(self):
         selected_display = self.lang_var_display.get()
         new_lang = self.app.lang
@@ -1056,6 +1240,59 @@ class SettingsTab(tk.Frame):
         else:
             self.status_lbl.config(text=t(self.lang, "settings_saved"))
             self.after(2000, lambda: self.status_lbl.config(text=""))
+
+    def _export(self):
+        from tkinter import filedialog
+        data = {
+            "settings": load_settings(),
+            "portfolio": load_portfolio(),
+        }
+
+        path = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON файл", "*.json"), ("Всички файлове", "*.*")],
+            initialfile="mbw_backup.json",
+            title=t(self.lang, "btn_export"),
+        )
+        if not path:
+            return
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        self.status_lbl.config(text=t(self.lang, "export_ok"), fg="green")
+        self.after(3000, lambda: self.status_lbl.config(text=""))
+
+    def _import(self):
+        from tkinter import filedialog, messagebox
+        from portfolio import save_portfolio
+
+        path = filedialog.askopenfilename(
+            filetypes=[("JSON файл", "*.json"), ("Всички файлове", "*.*")],
+            title=t(self.lang, "btn_import"),
+        )
+        if not path:
+            return
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            messagebox.showerror(t(self.lang, "app_title"), t(self.lang, "import_err_format"))
+            return
+
+        if "settings" not in data or "portfolio" not in data:
+            messagebox.showerror(t(self.lang, "app_title"), t(self.lang, "import_err_format"))
+            return
+
+        if not messagebox.askyesno(t(self.lang, "app_title"), t(self.lang, "import_confirm")):
+            return
+
+        save_settings(data["settings"])
+        save_portfolio(data["portfolio"])
+
+        self.status_lbl.config(text=t(self.lang, "import_ok"), fg="green")
+        self.after(500, lambda: self.app.change_language(data["settings"].get("language", "en")))
 
 
 if __name__ == "__main__":

@@ -11,8 +11,8 @@ TRANSLATIONS = {
         # SPS Tab
         "sps_title": "Seed Phrase Storage Calculator",
         "sps_description": (
-            "Enter your seed phrase words, then two passwords equal in length to the number of words.\n"
-            "Only Latin letters (a-z, A-Z) and digits (0-9) are allowed in passwords. No special characters."
+            "Enter your seed phrase words, then two sentences (passwords) equal in length to the number of words.\n"
+            "Only Latin letters (a-z, A-Z) are allowed. No digits or special characters."
         ),
         "label_seed_words": "Seed Phrase Words (12, 18 or 24):",
         "placeholder_word": "word",
@@ -81,6 +81,46 @@ TRANSLATIONS = {
         "err_invalid_address": "Invalid BTC address format.",
         "err_duplicate_address": "This address is already in your portfolio.",
 
+        "tab_help": "Help",
+        "label_algorithm": "How the calculation works:",
+        "text_algorithm": (
+            "LETTER VALUES:  a-z = 1 to 26  |  A-Z = 27 to 52\n"
+            "\n"
+            "ENCODE (words → numbers)\n"
+            "  Step 1 — Code each word:\n"
+            "    number[i]  =  word_index[i]  ×  value(sentence1[i])  ×  value(sentence2[i])\n"
+            "    word_index = position of the word in the BIP39 list (abandon=1 ... zoo=2048)\n"
+            "\n"
+            "  Step 2 — Shuffle:\n"
+            "    sum[i]  =  value(sentence1[i])  +  value(sentence2[i])\n"
+            "    Sort the 24 numbers by their sum (smallest sum first).\n"
+            "    Equal sums keep their original order (stable sort).\n"
+            "\n"
+            "DECODE (numbers → words)\n"
+            "  Step 1 — Find the original order:\n"
+            "    Calculate the same 24 sums from both sentences.\n"
+            "    Sort positions by sum — this tells you which number belongs where.\n"
+            "\n"
+            "  Step 2 — Recover each word:\n"
+            "    word_index[i]  =  number  ÷  (value(sentence1[i])  ×  value(sentence2[i]))\n"
+            "    Look up the word at that index in the BIP39 list."
+        ),
+
+        "label_bip39_list": "BIP39 Word List (2048 words):",
+        "desc_bip39_list": "These are all valid seed phrase words in order. The number on the left is the index used in the calculation.",
+        "btn_show_bip39": "Show BIP39 word list...",
+        "bip39_loading": "Loading 2048 words...",
+
+        # Backup
+        "label_backup": "Backup & Restore",
+        "desc_backup": "Export all your settings and portfolio addresses to a JSON file. Import on another device to restore everything.",
+        "btn_export": "Export backup...",
+        "btn_import": "Import backup...",
+        "export_ok": "Backup exported successfully.",
+        "import_ok": "Backup imported. Reloading...",
+        "import_err_format": "Invalid backup file format.",
+        "import_confirm": "This will overwrite your current settings and portfolio. Continue?",
+
         # Languages
         "lang_en": "English",
         "lang_bg": "Bulgarian",
@@ -95,8 +135,8 @@ TRANSLATIONS = {
         # SPS Tab
         "sps_title": "Калкулатор за Seed Phrase",
         "sps_description": (
-            "Въведете думите от вашата seed фраза, след това две пароли с дължина равна на броя думи.\n"
-            "Паролите трябва да съдържат само латински букви (a-z, A-Z) и цифри (0-9). Без специални символи."
+            "Въведете думите от вашата seed фраза, след това две изречения с дължина равна на броя думи.\n"
+            "Разрешени са само латински букви (a-z, A-Z). Без цифри или специални символи."
         ),
         "label_seed_words": "Думи от Seed Phrase (12, 18 или 24):",
         "placeholder_word": "дума",
@@ -164,6 +204,46 @@ TRANSLATIONS = {
         "err_empty_address": "Моля въведете BTC адрес.",
         "err_invalid_address": "Невалиден формат на BTC адрес.",
         "err_duplicate_address": "Този адрес вече е в портфолиото.",
+
+        "tab_help": "Помощ",
+        "label_algorithm": "Как се пресмята:",
+        "text_algorithm": (
+            "СТОЙНОСТИ НА БУКВИТЕ:  a-z = 1 до 26  |  A-Z = 27 до 52\n"
+            "\n"
+            "КОДИРАНЕ (думи → числа)\n"
+            "  Стъпка 1 — Кодирай всяка дума:\n"
+            "    число[i]  =  индекс_на_дума[i]  ×  стойност(изречение1[i])  ×  стойност(изречение2[i])\n"
+            "    индекс = позицията на думата в BIP39 списъка (abandon=1 ... zoo=2048)\n"
+            "\n"
+            "  Стъпка 2 — Разбъркване:\n"
+            "    сума[i]  =  стойност(изречение1[i])  +  стойност(изречение2[i])\n"
+            "    Подреди 24-те числа по нарастваща сума.\n"
+            "    При равни суми — запази оригиналния ред (stable sort).\n"
+            "\n"
+            "ДЕКОДИРАНЕ (числа → думи)\n"
+            "  Стъпка 1 — Намери оригиналния ред:\n"
+            "    Изчисли същите 24 суми от двете изречения.\n"
+            "    Подреди позициите по сума — така знаеш кое число на коя позиция е.\n"
+            "\n"
+            "  Стъпка 2 — Възстанови думите:\n"
+            "    индекс[i]  =  число  ÷  (стойност(изречение1[i])  ×  стойност(изречение2[i]))\n"
+            "    Намери думата с този индекс в BIP39 списъка."
+        ),
+
+        "label_bip39_list": "BIP39 Списък с думи (2048 думи):",
+        "desc_bip39_list": "Всички валидни думи за seed фраза по ред. Числото вляво е индексът, използван при пресмятането.",
+        "btn_show_bip39": "Покажи BIP39 списък с думи...",
+        "bip39_loading": "Зарежда 2048 думи...",
+
+        # Backup
+        "label_backup": "Архивиране и възстановяване",
+        "desc_backup": "Експортирай всички настройки и адреси от портфолиото в JSON файл. Импортирай на друго устройство за да възстановиш всичко.",
+        "btn_export": "Експортирай архив...",
+        "btn_import": "Импортирай архив...",
+        "export_ok": "Архивът е експортиран успешно.",
+        "import_ok": "Архивът е импортиран. Презарежда...",
+        "import_err_format": "Невалиден формат на архивния файл.",
+        "import_confirm": "Това ще презапише текущите ти настройки и портфолио. Продължи?",
 
         # Languages
         "lang_en": "English",

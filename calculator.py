@@ -1,10 +1,12 @@
 # SPS Calculator - encode and decode seed phrases
-# Algorithm: result[i] = word_index * char_value(pass1[i]) * char_value(pass2[i])
-# char_value: a=1..z=26, A=1..Z=26, 0=1..9=9 (digits: '0'->1, '1'->2, ..., '9'->10... wait)
-# Per user spec: digits are their numeric value, letters are their alphabetical position
-# digits: '0'=0? No - user said "номера на буквите е от поредността им - A е 1"
-# For digits: '1'=1, '2'=2, ..., '9'=9, '0'=10 (or treat as positional: 0->10 to avoid zero multiply)
-# We use: letters a-z/A-Z -> 1-26, digits 1-9 -> 1-9, digit 0 -> 10 (to avoid zero)
+#
+# Algorithm:
+#   char_value: a-z = 1-26, A-Z = 27-52  (no digits)
+#   encode[i] = word_index * char_value(pass1[i]) * char_value(pass2[i])
+#   shuffle: sort encoded numbers by (char_value(pass1[i]) + char_value(pass2[i])),
+#            stable sort (equal sums keep original order)
+#
+# Decode is the reverse: unshuffle using the same sums, then divide to get word_index.
 
 from bip39_wordlist import get_word_index, get_word_by_index
 
@@ -12,16 +14,13 @@ from bip39_wordlist import get_word_index, get_word_by_index
 def char_value(ch: str) -> int:
     """
     Returns numeric value of a character:
-    - a/A=1, b/B=2, ..., z/Z=26
-    - '1'=1, '2'=2, ..., '9'=9, '0'=10
+    - a-z = 1-26
+    - A-Z = 27-52
     """
-    ch = ch.lower()
-    if ch.isalpha():
+    if ch.islower():
         return ord(ch) - ord('a') + 1
-    elif ch.isdigit():
-        if ch == '0':
-            return 10
-        return int(ch)
+    elif ch.isupper():
+        return ord(ch) - ord('A') + 27
     return 0
 
 
@@ -33,24 +32,33 @@ def validate_password(password: str, length: int, n: int):
     if len(password) != length:
         return f"password_length:{n}:{length}"
     for ch in password:
-        if not (ch.isalpha() and ch.isascii()) and not ch.isdigit():
+        if not (ch.isalpha() and ch.isascii()):
             return f"password_chars:{n}"
     return None
+
+
+def _shuffle_order(pass1: str, pass2: str) -> list:
+    """
+    Returns the shuffle order: a list of original indices sorted by
+    (char_value(pass1[i]) + char_value(pass2[i])), stable sort.
+    """
+    n = len(pass1)
+    sums = [(char_value(pass1[i]) + char_value(pass2[i]), i) for i in range(n)]
+    sums.sort(key=lambda x: x[0])  # stable sort — Python's sort is stable
+    return [x[1] for x in sums]
 
 
 def encode(words: list, pass1: str, pass2: str):
     """
     Encodes seed phrase words using two passwords.
-    Returns (list of encoded numbers, None) on success,
+    Returns (list of shuffled encoded numbers, None) on success,
     or (None, error_key_with_params) on failure.
     """
     n = len(words)
 
-    # Validate word count
     if n not in (12, 18, 24):
         return None, "err_word_count"
 
-    # Validate passwords
     for i, pwd in enumerate([pass1, pass2], 1):
         err = validate_password(pwd, n, i)
         if err:
@@ -60,23 +68,27 @@ def encode(words: list, pass1: str, pass2: str):
             else:
                 return None, f"err_password_chars:n={i}"
 
-    # Encode each word
-    result = []
+    # Step 1: encode each word at its original position
+    encoded = []
     for i, word in enumerate(words):
         idx = get_word_index(word)
         if idx == 0:
             return None, f"err_invalid_word:word={word}:pos={i+1}"
         v1 = char_value(pass1[i])
         v2 = char_value(pass2[i])
-        result.append(idx * v1 * v2)
+        encoded.append(idx * v1 * v2)
 
-    return result, None
+    # Step 2: shuffle — reorder encoded numbers by sum of char values
+    order = _shuffle_order(pass1, pass2)
+    shuffled = [encoded[i] for i in order]
+
+    return shuffled, None
 
 
 def decode(encoded: list, pass1: str, pass2: str):
     """
-    Decodes encoded numbers back to seed phrase words.
-    Returns (list of words, None) on success,
+    Decodes shuffled encoded numbers back to seed phrase words.
+    Returns (list of words in original order, None) on success,
     or (None, error) on failure.
     """
     n = len(encoded)
@@ -84,7 +96,6 @@ def decode(encoded: list, pass1: str, pass2: str):
     if n not in (12, 18, 24):
         return None, "err_word_count"
 
-    # Validate passwords
     for i, pwd in enumerate([pass1, pass2], 1):
         err = validate_password(pwd, n, i)
         if err:
@@ -94,8 +105,17 @@ def decode(encoded: list, pass1: str, pass2: str):
             else:
                 return None, f"err_password_chars:n={i}"
 
+    # Step 1: unshuffle — find original positions
+    order = _shuffle_order(pass1, pass2)
+    # order[j] = original index that ended up at shuffled position j
+    # We need the reverse: unshuffled[original_i] = shuffled[j]
+    unshuffled = [None] * n
+    for j, orig_i in enumerate(order):
+        unshuffled[orig_i] = encoded[j]
+
+    # Step 2: decode each number at its original position
     words = []
-    for i, val in enumerate(encoded):
+    for i, val in enumerate(unshuffled):
         v1 = char_value(pass1[i])
         v2 = char_value(pass2[i])
         divisor = v1 * v2
@@ -136,6 +156,6 @@ def parse_encoded_string(encoded_str: str, expected_n=None):
     return numbers, None
 
 
-def format_encoded(numbers: list[int]) -> str:
+def format_encoded(numbers: list) -> str:
     """Formats list of numbers as dash-separated string."""
     return "-".join(str(n) for n in numbers)
